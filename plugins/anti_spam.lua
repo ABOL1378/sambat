@@ -1,5 +1,4 @@
---An empty table for solving multiple kicking problem(thanks to @topkecleon )
-kicktable = {}
+﻿kicktable = {}
 
 do
 
@@ -88,11 +87,11 @@ local function pre_process(msg)
 	  end
 	  local receiver = get_receiver(msg)
 	  if msg.to.type == 'user' then
-		local max_msg = 7 * 1
+		local max_msg = 5 * 1
 		print(msgs)
 		if msgs >= max_msg then
 			print("Pass2")
-			send_large_msg("user#id"..msg.from.id, "User ["..msg.from.id.."] blocked for spam.")
+			send_large_msg("user#id"..msg.from.id, "کاربر ["..msg.from.id.."] به دلیل اسپم بلاک شد.")
 			savelog(msg.from.id.." PM", "User ["..msg.from.id.."] blocked for spam.")
 			block_user("user#id"..msg.from.id,ok_cb,false)--Block user if spammed in private
 		end
@@ -108,10 +107,10 @@ local function pre_process(msg)
 	  if msg.to.type == 'chat' or msg.to.type == 'channel' then
 		if username then
 			savelog(msg.to.id, name_log.." @"..username.." ["..msg.from.id.."] kicked for #spam")
-			send_large_msg(receiver , "Flooding is not allowed here\n@"..username.."["..msg.from.id.."]\nStatus: User kicked")
+			send_large_msg(receiver , "کاربر به دلیل اسپم از گروه اخراج شد.\nیوزر : @"..username.."\nآیدی : "..msg.from.id)
 		else
 			savelog(msg.to.id, name_log.." ["..msg.from.id.."] kicked for #spam")
-			send_large_msg(receiver , "Flooding is not allowed here\nName:"..name_log.."["..msg.from.id.."]\nStatus: User kicked")
+			send_large_msg(receiver , "کاربر به دلیل اسپم از گروه اخراج شد.\nیوزر : @"..(msg.from.username or "ندارد").."\nآیدی : "..msg.from.id)
 		end
 	  end
       -- incr it on redis
@@ -121,7 +120,7 @@ local function pre_process(msg)
       local gbanspamonredis = redis:get(gbanspam)
       --Check if user has spammed is group more than 4 times  
       if gbanspamonredis then
-        if tonumber(gbanspamonredis) ==  4 and not is_owner(msg) then
+        if tonumber(gbanspamonredis) ==  7 and not is_owner(msg) then
           --Global ban that user
           banall_user(msg.from.id)
           local gbanspam = 'gban:spam'..msg.from.id
@@ -135,8 +134,8 @@ local function pre_process(msg)
           local print_name = user_print_name(msg.from):gsub("‮", "")
 		  local name = print_name:gsub("_", "")
           --Send this to that chat
-          send_large_msg("chat#id"..msg.to.id, "User [ "..name.." ]"..msg.from.id.." globally banned (spamming)")
-		  send_large_msg("channel#id"..msg.to.id, "User [ "..name.." ]"..msg.from.id.." globally banned (spamming)")
+          send_large_msg("chat#id"..msg.to.id, "کاربر به دلیل اسپم از تمام گروه های ربات محروم شد\nنام : "..name.."\nآیدی : "..msg.from.id)
+		  send_large_msg("channel#id"..msg.to.id, "کاربر به دلیل اسپم از تمام گروه های ربات محروم شد\nنام : "..name.."\nآیدی : "..msg.from.id)
           local GBan_log = 'GBan_log'
 		  local GBan_log =  data[tostring(GBan_log)]
 		  for k,v in pairs(GBan_log) do

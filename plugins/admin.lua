@@ -13,6 +13,67 @@ local function set_bot_photo(msg, success, result)
     send_large_msg(receiver, 'Failed, please try again!', ok_cb, false)
   end
 end
+local function block_by_reply(extra, success, result)
+	if result.to.peer_type == 'chat' or result.to.peer_type == 'channel' then
+		local chat = 'chat#id'..result.to.peer_id
+		local channel = 'channel#id'..result.to.peer_id
+	if tonumber(result.from.peer_id) == tonumber(our_id) then -- Ignore bot
+			return
+	end
+	if is_admin2(result.from.peer_id) then -- Ignore admins
+		return
+	end
+		 block_user("user#id"..result.from.peer_id,ok_cb,false)
+		send_large_msg(chat, "کاربر از اکانت ربات بلاک شد.\nآیدی : "..result.from.peer_id)
+		send_large_msg(channel, "کاربر از اکانت ربات بلاک شد.\nآیدی : "..result.from.peer_id)
+	else
+		return
+	end
+end
+
+local function unblock_by_reply(extra, success, result)
+	if result.to.peer_type == 'chat' or result.to.peer_type == 'channel' then
+		local chat = 'chat#id'..result.to.peer_id
+		local channel = 'channel#id'..result.to.peer_id
+		 unblock_user("user#id"..result.from.peer_id,ok_cb,false)
+		send_large_msg(chat, "کاربر از لیست بلاک اکانت ربات خارج شد.\nآیدی : "..result.from.peer_id)
+		send_large_msg(channel, "کاربر از لیست بلاک اکانت ربات خارج شد.\nآیدی : "..result.from.peer_id)
+	else
+		return
+	end
+end
+
+local function block_unblock_res(extra, success, result)
+      local chat_id = extra.chat_id
+	  local chat_type = extra.chat_type
+	  if chat_type == "chat" then
+		receiver = 'chat#id'..chat_id
+	  else
+		receiver = 'channel#id'..chat_id
+	  end
+	  if success == 0 then
+		return send_large_msg(receiver, "Cannot find user by that username!")
+	  end
+      local member_id = result.peer_id
+      local user_id = member_id
+      local member = result.username
+	  local from_id = extra.from_id
+      local get_cmd = extra.get_cmd
+       if get_cmd == "pmblock" then
+         if member_id == from_id then
+			return --ignore bot
+         end
+         if is_admin2(member_id) and not is_admin2(sender) then
+            send_large_msg(receiver, "ادمین های ربات را نمیتوان بلاک کرد.")
+			return
+         end
+        send_large_msg(receiver, 'کاربر از اکانت ربات بلاک شد.\nیوزر : @'..member..'\nآیدی : '..member_id)
+		 block_user("user#id"..member_id,ok_cb,false)
+      elseif get_cmd == 'pmunblock' then
+        send_large_msg(receiver, 'کاربر از لیست بلاک اکانت ربات خارج شد.\nیوزر : @'..member..'\nآیدی : '..member_id)
+		 unblock_user("user#id"..member_id,ok_cb,false)
+    end
+end
 
 --Function to add log supergroup
 local function logadd(msg)
@@ -151,6 +212,66 @@ local function reload_plugins( )
 end
 
 local function run(msg,matches)
+	if matches[1]:lower() == 'pmblock' then
+    if type(msg.reply_id)~="nil" and is_momod(msg) then
+      if is_admin1(msg) then
+		msgr = get_message(msg.reply_id,block_by_reply, false)
+      end
+      local user_id = matches[2]
+      local chat_id = msg.to.id
+    elseif string.match(matches[2], '^%d+$') then
+        if tonumber(matches[2]) == tonumber(our_id) then
+         	return
+        end
+        if is_admin2(matches[2]) then
+          	return 
+        end
+        if tonumber(matches[2]) == tonumber(msg.from.id) then
+          	return 
+        end
+        local print_name = user_print_name(msg.from):gsub("‮", "")
+	    local name = print_name:gsub("_", "")
+		local receiver = get_receiver(msg)
+        savelog(msg.to.id, name.." ["..msg.from.id.."] blocked user ".. matches[2])
+		 block_user("user#id"..user_id ,ok_cb, false)
+		send_large_msg(receiver, 'کاربر ['..matches[2]..'] از اکانت ربات بلاک شد.')
+      else
+		local cbres_extra = {
+   chat_id = msg.to.id,
+		get_cmd = 'pmblock',
+		from_id = msg.from.id,
+		chat_type = msg.to.type
+		}
+		local username = string.gsub(matches[2], '@', '')
+		resolve_username(username, block_unblock_res, cbres_extra)
+    end
+  end
+
+ if matches[1]:lower() == 'pmunblock' then
+    if type(msg.reply_id)~="nil" then
+      if is_admin1(msg) then
+		msgr = get_message(msg.reply_id,unblock_by_reply, false)
+      end
+      local user_id = matches[2]
+      local chat_id = msg.to.id
+    elseif string.match(matches[2], '^%d+$') then
+        local print_name = user_print_name(msg.from):gsub("‮", "")
+	    local name = print_name:gsub("_", "")
+		local receiver = get_receiver(msg)
+        savelog(msg.to.id, name.." ["..msg.from.id.."] unblocked user ".. matches[2])
+		 unblock_user("user#id"..user_id, ok_cb, false)
+		send_large_msg(receiver, 'کاربر ['..matches[2]..'] از لیست بلاک اکانت ربات خارج شد.')
+      else
+		local cbres_extra = {
+   chat_id = msg.to.id,
+		get_cmd = 'pmunblock',
+		from_id = msg.from.id,
+		chat_type = msg.to.type
+		}
+		local username = string.gsub(matches[2], '@', '')
+		resolve_username(username, block_unblock_res, cbres_extra)
+    end
+  end
     local receiver = get_receiver(msg)
     local group = msg.to.id
 	local print_name = user_print_name(msg.from):gsub("‮", "")
@@ -186,7 +307,7 @@ local function run(msg,matches)
     	return "Message has been sent"
     end
     
-    if matches[1] == "pmblock" then
+    --[[if matches[1] == "pmblock" then
     	if is_admin2(matches[2]) then
     		return "You can't block admins"
     	end
@@ -196,7 +317,7 @@ local function run(msg,matches)
     if matches[1] == "pmunblock" then
     	unblock_user("user#id"..matches[2],ok_cb,false)
     	return "User unblocked"
-    end
+    end]]
     if matches[1] == "import" then--join by group link
     	local hash = parsed_url(matches[2])
     	import_chat_link(hash,ok_cb,false)
@@ -262,7 +383,7 @@ end
 		receiver = get_receiver(msg)
 		reload_plugins(true)
 		post_msg(receiver, "Reloaded!", ok_cb, false)
-		return "Reloaded!"
+		return ""
 	end
 	--[[*For Debug*
 	if matches[1] == "vardumpmsg" and is_admin1(msg) then
@@ -308,8 +429,12 @@ return {
   patterns = {
 	"^[#!/](pm) (%d+) (.*)$",
 	"^[#!/](import) (.*)$",
-	"^[#!/](pmunblock) (%d+)$",
-	"^[#!/](pmblock) (%d+)$",
+	--"^[#!/](pmunblock) (%d+)$",
+	--"^[#!/](pmblock) (%d+)$",
+  "^[#!/](pmblock) (.*)$",
+  "^[#!/](pmblock)$",
+	"^[#!/](pmunblock)$",
+  "^[#!/](pmunblock) (.*)$",
 	"^[#!/](markread) (on)$",
 	"^[#!/](markread) (off)$",
 	"^[#!/](setbotphoto)$",
@@ -319,8 +444,9 @@ return {
 	"^[#!/](addcontact) (.*) (.*) (.*)$", 
 	"^[#!/](sendcontact) (.*) (.*) (.*)$",
 	"^[#!/](mycontact)$",
-	"^[#/!](reload)$",
+	--"^[#/!](reload)$",
 	"^[#/!](updateid)$",
+	"^[#/!](sync_gbans)$",
 	"^[#/!](addlog)$",
 	"^[#/!](remlog)$",
 	"%[(photo)%]",

@@ -77,6 +77,7 @@ function check_member_group(cb_extra, success, result)
           set_name = string.gsub(msg.to.print_name, '_', ' '),
           lock_name = 'yes',
           lock_photo = 'no',
+          welcome = '✅',
           lock_member = 'no',
           flood = 'yes',
         }
@@ -224,9 +225,24 @@ function show_group_settingsmod(msg, target)
 			data[tostring(target)]['settings']['lock_rtl'] = 'no'
 		end
 	end
+	if data[tostring(target)]['settings'] then
+		if not data[tostring(target)]['settings']['welcome'] then
+			data[tostring(target)]['settings']['welcome'] = '✅'
+		end
+	end
+    local group_type = "Normal"
+    if  data[tostring(msg.to.id)]['group_type'] then
+    group_type = data[tostring(msg.to.id)]['group_type']
+    end
+    local version = "1.0"
+    if redis:get('bot:version') then
+    version = redis:get('bot:version')
+    end
   local settings = data[tostring(target)]['settings']
-  local text = "Group settings:\nLock group name : "..settings.lock_name.."\nLock group photo : "..settings.lock_photo.."\nLock group member : "..settings.lock_member.."\nLock group leave : "..leave_ban.."\nflood sensitivity : "..NUM_MSG_MAX.."\nBot protection : "..bots_protection.."\nLock links : "..settings.lock_link.."\nLock RTL: "..settings.lock_rtl.."\nLock sticker: "..settings.lock_sticker.."\nPublic: "..settings.public
-  return text
+  local text = "*Group Settings :*\n_Lock Group Name : "..settings.lock_name.."_\n_Lock Group Photo : "..settings.lock_photo.."_\n_Lock Group Member : "..settings.lock_member.."_\n_Lock Group Leave : "..leave_ban.."_\n_Lock Group links : "..settings.lock_link.."_\n_Lock Group RTL: "..settings.lock_rtl.."\nLock Group Sticker: "..settings.lock_sticker.."_\n_Welcome Message : "..settings.welcome.."_\n_Group Type :_ *"..group_type.."*\n_flood Sensitivity :_ *"..NUM_MSG_MAX.."*\n_Bot Version :_ *"..version.."*\n_Bot Brotection : "..bots_protection.."_\n_Group Public: "..settings.public.."_\n\n[Beyond Team Channel](Telegram.Me/BeyondTeam)"
+  local text = string.gsub(text,'yes','🔐')
+  local text = string.gsub(text,'no','🔓')
+send_api_msg(msg, get_receiver_api(msg), text, true, 'md')
 end
 
 local function set_descriptionmod(msg, data, target, about)
@@ -275,6 +291,33 @@ local function unlock_group_arabic(msg, data, target)
   end
 end
 
+local function lock_group_welcome(msg, data, target)
+  if not is_momod(msg) then
+    return
+  end
+  local group_welcome_lock = data[tostring(target)]['settings']['welcome']
+  if group_welcome_lock == '✅' then
+    return 'Group welcome is already enable'
+  else
+    data[tostring(target)]['settings']['welcome'] = '✅'
+    save_data(_config.moderation.data, data)
+    return 'Group welcome has been enabled'
+  end
+end
+
+local function unlock_group_welcome(msg, data, target)
+  if not is_momod(msg) then
+    return
+  end
+  local group_welcome_lock = data[tostring(target)]['settings']['welcome']
+  if group_welcome_lock == '❌' then
+    return 'Group welcome is already disable'
+  else
+    data[tostring(target)]['settings']['welcome'] = '❌'
+    save_data(_config.moderation.data, data)
+    return 'Group welcome has been disabled'
+  end
+end
 local function lock_group_bots(msg, data, target)
   if not is_momod(msg) then
     return 
@@ -1468,7 +1511,17 @@ end
 				end
 			end
 		end
-
+if matches[1]:lower() == 'wlc' then
+      local target = msg.to.id
+      if matches[2]:lower() == 'enable' then
+        savelog(msg.to.id, name_log.." ["..msg.from.id.."] locked welcome ")
+        return lock_group_welcome(msg, data, target)
+      end
+	if matches[2] == 'disable' then
+        savelog(msg.to.id, name_log.." ["..msg.from.id.."] unlocked welcome ")
+        return unlock_group_welcome(msg, data, target)
+      end
+	end
 	--Begin chat muteuser
 		if matches[1] == "muteuser" and is_momod(msg) then
 		local chat_id = msg.to.id
@@ -1531,24 +1584,48 @@ end
   end
 
 if msg.to.type == 'chat' then
-    if matches[1] == 'newlink' and not is_realm(msg) then
+if matches[1] == 'newlink' and is_momod(msg) and not is_realm(msg) then
+			local function callback_link (extra , success, result)
+			local receiver = get_receiver(msg)
+				if success == 0 then
+					send_large_msg(receiver, 'Bot Not Group Creator')
+					data[tostring(msg.to.id)]['settings']['set_link'] = nil
+					save_data(_config.moderation.data, data)
+				else
+					send_large_msg(receiver, "Newlink Created")
+					data[tostring(msg.to.id)]['settings']['set_link'] = result
+					save_data(_config.moderation.data, data)
+				end
+			end
+			savelog(msg.to.id, name_log.." ["..msg.from.id.."] attempted to create a new SuperGroup link")
+			export_chat_link(receiver, callback_link, false)
+		end
+		if matches[1]:lower() == 'setlink' and is_owner(msg) then
+			data[tostring(msg.to.id)]['settings']['set_link'] = 'waiting'
+			save_data(_config.moderation.data, data)
+			return 'Please send the new group link now'
+		end
+
+		if msg.text then
+			if msg.text:match("^(https://telegram.me/joinchat/%S+)$") and data[tostring(msg.to.id)]['settings']['set_link'] == 'waiting' and is_owner(msg) then
+				data[tostring(msg.to.id)]['settings']['set_link'] = msg.text
+				save_data(_config.moderation.data, data)
+				return "Newlink has been setted."
+			end
+end 			
+    if matches[1] == 'link' then
       if not is_momod(msg) then
         return "For moderators only!"
       end
-      local function callback (extra , success, result)
-        local receiver = 'chat#'..msg.to.id
-        if success == 0 then
-           return send_large_msg(receiver, '*Error: Invite link failed* \nReason: Not creator.')
-        end
-        send_large_msg(receiver, "Created a new link")
-        data[tostring(msg.to.id)]['settings']['set_link'] = result
-        save_data(_config.moderation.data, data)
+      local group_link = data[tostring(msg.to.id)]['settings']['set_link']
+      if not group_link then
+        return "Create a link using /newlink first !"
       end
-      local receiver = 'chat#'..msg.to.id
-      savelog(msg.to.id, name_log.." ["..msg.from.id.."] revoked group link ")
-      return export_chat_link(receiver, callback, true)
-    end
-    if matches[1] == 'link' then
+       savelog(msg.to.id, name_log.." ["..msg.from.id.."] requested group link ["..group_link.."]")
+   local text = "*Group Link :*\n["..msg.to.title.."]("..group_link..")"
+  send_api_msg(msg,get_receiver_api(msg),text,true,'md',msg.to.title,group_link)
+		end
+    if matches[1] == 'gplink' then
       if not is_momod(msg) then
         return "For moderators only!"
       end
@@ -1727,7 +1804,7 @@ return {
   "^[#!/](setphoto)$",
   "^[#!/](promote) (.*)$",
   "^[#!/](promote)",
-  "^[#!/](help)$",
+  --"^[#!/](help)$",
   "^[#!/](clean) (.*)$",
   "^[#!/](kill) (chat)$",
   "^[#!/](kill) (realm)$",
@@ -1744,9 +1821,13 @@ return {
   "^[#!/](setflood) (%d+)$",
   "^[#!/](settings)$",
   "^[#!/](public) (.*)$",
+  "^[#!/](wlc) (.*)$",
   "^[#!/](modlist)$",
   "^[#!/](newlink)$",
   "^[#!/](link)$",
+  "^[#!/](gplink)$",
+ "^[!#/](setlink)$",
+ "^(https://telegram.me/joinchat/%S+)$",
   "^[#!/]([Mm]ute) ([^%s]+)$",
   "^[#!/]([Uu]nmute) ([^%s]+)$",
   "^[#!/]([Mm]uteuser)$",

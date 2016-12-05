@@ -142,7 +142,7 @@ local function is_plugin_disabled_on_chat(plugin_name, receiver)
       if disabled_plugin == plugin_name and disabled then
         local warning = 'Plugin '..disabled_plugin..' is disabled on this chat'
         print(warning)
-        send_msg(receiver, warning, ok_cb, false)
+
         return true
       end
     end
@@ -204,6 +204,9 @@ function load_config( )
   for v,user in pairs(config.sudo_users) do
     print("Sudo user: " .. user)
   end
+  for v,user in pairs(config.solid) do
+    print("solid user: " .. user)
+  end
   return config
 end
 
@@ -212,52 +215,84 @@ function create_config( )
   -- A simple config with basic plugins and ourselves as privileged user
   config = {
     enabled_plugins = {
-	"admin",
-    "onservice",
     "inrealm",
-    "ingroup",
     "inpm",
-    "banhammer",
     "stats",
     "anti_spam",
     "owners",
-    "arabic_lock",
-    "set",
-    "get",
+    "pl",
     "broadcast",
     "invite",
     "all",
     "leave_ban",
-	"supergroup",
-	"whitelist",
-	"msg_checks"
+    "whitelist",
+    "time",
+    "reload",
+    "tosticker",
+    "tophoto",
+    "mean",
+    "tr",
+    "warn",
+    "sendp",
+    "admin",
+    "write",
+    "banhammer",
+    "linksup",
+    "chat",
+    "savepl",
+    "txt2stick",
+    "text2sticker",
+    "rmsg",
+    "bold",
+    "code",
+    "hyper",
+    "italic",
+    "markdown",
+    "times",
+    "azan",
+    "set_type",
+    "info",
+    "setversion",
+    "joke",
+    "jomlak",
+    "file_dw",
+    "msg_checks",
+    "welcome",
+    "setnerkh",
+    "sethelp",
+    "short",
+    "weather",
+    "me",
+    "map",
+    "calc",
+    "savefile",
+    "ingroup",
+    "filtering",
+    "abjad",
+    "voice",
+    "supergroup",
+    "setsticker",
+    "kickme",
+    "onservice",
+    "id"
     },
-    sudo_users = {110626080,103649648,111020322,0,tonumber(our_id)},--Sudo users
+    sudo_users = {157059515},--ایدی خودتون رو اینجا بزارید
+    solid = {157059515},--ایدی خودتون رو اینجا بزارید
     moderation = {data = 'data/moderation.json'},
-    about_text = [[Teleseed v4
-An advanced administration bot based on TG-CLI written in Lua
+    about_text = [[ Tele Beyond V2.5
+An Administrator The PowerFull Bot Based On TeleSeed Written In Lua
+    
+Sudo Users :
+Developer&Founder : @SoLiD021
+Developer&Manager : @MrHalix
+Developer&Manager : @idivanmanheb
 
-https://github.com/SEEDTEAM/TeleSeed
-
-Admins
-@iwals [Founder]
-@imandaneshi [Developer]
-@POTUS [Developer]
-@seyedan25 [Manager]
-@aRandomStranger [Admin]
-
-Special thanks to
-awkward_potato
-Siyanew
-topkecleon
-Vamptacus
-
-Our channels
-@teleseedch [English]
-@iranseed [persian]
-
-Our website 
-http://teleseed.seedteam.org/
+Team Channel :
+@BeyondTeam
+     
+Special Thx To :
+Beyond Team
+And All My Friends :D ️
 ]],
     help_text_realm = [[
 Realm Commands:

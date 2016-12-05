@@ -208,7 +208,7 @@ if to == 'user' or service or is_admin1(msg) and to == "chat" or to == "channel"
 
 	if matches[1] == 'help' and msg.to.type == 'user' or matches[1] == 'pmhelp' and is_admin1(msg) and msg.to.type ~= 'user' then
       	savelog(msg.to.id, name_log.." ["..msg.from.id.."] used pm help")
-		text = "Welcome to TeleSeed!\n\nTo get a list of TeleSeed groups use /chats or /chatlist for a document list of chats.\n\nTo get a new TeleSeed group, contact a support group:\n\nFor English support, use: /join English support\n\nFor Persian support, use: /join Persian support\n\nFor more information, check out our channels:\n\n@TeleseedCH [English]\n@Iranseed [Persian]\n\nThanks for using @TeleSeed!"
+		text = " Welcome To TeleBeyond \n Bot Owner : \n @SoLiD021 \n Team Channel : \n @BeyondTeam \n For Show ChatList Send\n /chats \n For Show Bot Info Send\n /beyond "
      	return text
     end
 
@@ -220,7 +220,9 @@ if to == 'user' or service or is_admin1(msg) and to == "chat" or to == "channel"
       	savelog(msg.to.id, name_log.." ["..msg.from.id.."] Used /superhelp")
      	return super_help()
     end
-
+    if matches[1] == 'creator' then
+		return bot_creator(msg)
+    end
     if matches[1] == 'chats' and is_admin1(msg)then
 		return chat_list(msg)
 	elseif matches[1] == 'chats' and to == 'user' then
@@ -244,8 +246,9 @@ end
 return {
     patterns = {
 	"^[#!/](help)$",
+	"^[#!/](creator)$",
 	"^[#!/](pmhelp)$",
-	"^[#!/](superhelp)$",
+	--"^[#!/](superhelp)$",
     "^[#!/](chats)$",
     "^[#!/](chatlist)$",
     "^[#!/](join) (%d+)$",

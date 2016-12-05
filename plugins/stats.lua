@@ -91,11 +91,12 @@ local function bot_stats()
   return text
 end
 local function run(msg, matches)
-  if matches[1]:lower() == 'teleseed' then -- Put everything you like :)
+  if matches[1]:lower() == 'beyond' then -- Put everything you like :)
     local about = _config.about_text
     local name = user_print_name(msg.from)
     savelog(msg.to.id, name.." ["..msg.from.id.."] used /teleseed ")
-    return about
+send_api_msg(msg, get_receiver_api(msg), about, true, 'md')
+send_document(get_receiver(msg), "./data/telebeyond.gif", ok_cb, false)
   end 
   if matches[1]:lower() == "statslist" then
     if not is_momod(msg) then
@@ -121,7 +122,7 @@ local function run(msg, matches)
         return
       end
     end
-    if matches[2] == "teleseed" then -- Put everything you like :)
+    if matches[2] == "beyond" then -- Put everything you like :)
       if not is_admin1(msg) then
         return "For admins only !"
       else
@@ -143,8 +144,8 @@ return {
     "^[#!/]([Ss]tats)$",
     "^[#!/]([Ss]tatslist)$",
     "^[#!/]([Ss]tats) (group) (%d+)",
-    "^[#!/]([Ss]tats) (teleseed)",
-	"^[#!/]([Tt]eleseed)"
+    "^[#!/]([Ss]tats) (beyond)",
+	"^[#!/]([Bb]eyond)"
     }, 
   run = run
 }

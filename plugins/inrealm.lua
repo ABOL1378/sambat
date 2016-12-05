@@ -928,6 +928,7 @@ function run(msg, matches)
 			end
 			data[tostring(groups)][tostring(matches[2])] = nil
 			save_data(_config.moderation.data, data)
+send_large_msg('channel#id'..matches[2], 'سوپر گروه به دلیل(انقضا،دستور ادمین) حذف شد و ربات ان را به رسمیت نمیشناسد\nبرای اطلاع بیشتر به ربات پیام رسان زیر پیام بدید\n@Solid021Pv_Bot')
 			send_large_msg(receiver, 'Chat '..matches[2]..' removed')
 		end
 
